@@ -446,3 +446,67 @@
         constructor(cap){
           this.cap=cap;
           this.buf=new Array(cap);
+          this.head=0;
+          this.count=0;
+        }
+        push(v){
+          this.buf[this.head]=v;
+          this.head=(this.head+1)%this.cap;
+          this.count=Math.min(this.count+1,this.cap);
+        }
+        newestFirst(n){
+          const take=Math.min(n,this.count);
+          const out=[];
+          for(let i=0;i<take;i++){
+            const idx=(this.head-1-i+this.cap)%this.cap;
+            out.push(this.buf[idx]);
+          }
+          return out;
+        }
+      }
+
+      class Engine{
+        constructor(seed){
+          this.seed=seed>>>0;
+          this.panic=false;
+          this.mode="NORMAL";
+          this.syms=[
+            "BTC-PERP","ETH-PERP","SOL-PERP","DOGE-PERP","PEPE-PERP","ARB-PERP",
+            "SPX-INDEX","NDQ-INDEX","DXY","US10Y","WIF-PERP","TIA-PERP",
+            "LINK-PERP","AVAX-PERP","BNB-PERP","OP-PERP"
+          ];
+          this.prof=this.mkProfiles();
+          this.q=new Map();
+          this.tape=new Ring(600);
+          this.sig=new Ring(420);
+          this.series=new Map();
+          this.tick=0;
+          this.init();
+        }
+        mkProfiles(){
+          const mk=(anchor,vol,spreadBps,fundingBps,oi)=>({anchor,vol,spreadBps,fundingBps,oi, floor:Math.max(1e-12,anchor*1e-8)});
+          const m=new Map();
+          m.set("BTC-PERP",mk(64000,0.006,0.8,0.5,150e6));
+          m.set("ETH-PERP",mk(3200,0.009,1.1,0.7,60e6));
+          m.set("SOL-PERP",mk(145,0.018,1.9,1.2,12e6));
+          m.set("DOGE-PERP",mk(0.18,0.025,3.5,2.3,6.5e6));
+          m.set("PEPE-PERP",mk(0.000012,0.035,5.2,3.2,3.1e6));
+          m.set("ARB-PERP",mk(1.21,0.022,2.6,1.7,8.4e6));
+          m.set("SPX-INDEX",mk(5340,0.002,0.3,0.2,0));
+          m.set("NDQ-INDEX",mk(18950,0.0022,0.35,0.22,0));
+          m.set("DXY",mk(104.7,0.0012,0.18,0.12,0));
+          m.set("US10Y",mk(4.31,0.0018,0.22,0.14,0));
+          m.set("WIF-PERP",mk(2.4,0.042,6.5,4.1,2.6e6));
+          m.set("TIA-PERP",mk(15.3,0.024,3.1,1.9,3.9e6));
+          m.set("LINK-PERP",mk(17.8,0.018,2.2,1.5,7.3e6));
+          m.set("AVAX-PERP",mk(37.4,0.020,2.5,1.6,4.8e6));
+          m.set("BNB-PERP",mk(560,0.008,1.1,0.8,18e6));
+          m.set("OP-PERP",mk(3.1,0.023,2.9,1.8,5.2e6));
+          return m;
+        }
+        init(){
+          for(const s of this.syms){
+            const p=this.prof.get(s);
+            this.q.set(s, {sym:s, ts:Date.now(), mid:p.anchor, spr:12, fnd:4, oi:p.oi, ch:0, vol1m:0.0});
+            this.series.set(s, new Ring(420));
+            this.series.get(s).push({t:Date.now(), y:p.anchor});
