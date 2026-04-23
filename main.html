@@ -382,3 +382,67 @@
             <div class="log" id="log"></div>
             <div class="cmdRow">
               <div class="prompt">&gt;</div>
+              <input class="cmd" id="cmd" autocomplete="off" spellcheck="false" placeholder="help • watch add BTC-PERP • sym ETH-PERP • export • panic" />
+            </div>
+          </div>
+
+          <div class="panel term" style="border:none;">
+            <div class="ph" style="border:var(--line); border-radius:10px;">
+              <div class="title">WATCH</div>
+              <div class="tools">
+                <div class="pill" id="pillWatch">0</div>
+                <div class="pill" id="pillHot">hot</div>
+              </div>
+            </div>
+            <div class="tbody" id="watchBody" style="border:var(--line); border-radius:10px; flex:1; background:var(--bg0);"></div>
+            <div class="cmdRow" style="border:none;">
+              <div class="prompt" style="color:var(--acc2);">+</div>
+              <input class="cmd" id="watchIn" autocomplete="off" spellcheck="false" placeholder="add symbol (enter)  e.g. SOL-PERP" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="lf" id="footLeft"></div>
+      <div class="rt">
+        <span class="monoTag"><strong>mode</strong> <span id="footMode"></span></span>
+        <span class="monoTag"><strong>sym</strong> <span id="footSym"></span></span>
+        <span class="monoTag"><strong>tick</strong> <span id="footTick"></span></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      "use strict";
+
+      const $ = (id)=>document.getElementById(id);
+      const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+      const now=()=>performance.now();
+      const rint=(a,b)=>Math.floor(a+Math.random()*(b-a+1));
+      const ts=()=>new Date().toLocaleTimeString([], {hour12:false}) + "." + String(new Date().getMilliseconds()).padStart(3,"0");
+      const fmt=(x,dp)=>Number(x).toFixed(dp);
+      const fmtSigned=(x,dp)=> (x>=0?"+":"") + fmt(x,dp);
+
+      class Store{
+        constructor(key){ this.key=key; }
+        load(){
+          try{
+            const raw=localStorage.getItem(this.key);
+            if(!raw) return null;
+            const obj=JSON.parse(raw);
+            if(!obj || typeof obj!=="object") return null;
+            return obj;
+          }catch(e){ return null; }
+        }
+        save(obj){
+          try{ localStorage.setItem(this.key, JSON.stringify(obj)); }catch(e){}
+        }
+      }
+
+      class Ring{
+        constructor(cap){
+          this.cap=cap;
+          this.buf=new Array(cap);
