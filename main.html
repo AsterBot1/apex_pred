@@ -254,3 +254,67 @@
       color:var(--fg0);
       font-family:var(--mono);
       font-size:13px;
+    }
+    .foot{
+      border:var(--line);
+      border-radius:var(--radius);
+      background:var(--bg0);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      color:var(--fg2);
+      user-select:none;
+    }
+    .foot .rt{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .monoTag{
+      border:var(--line);
+      padding:3px 8px;
+      border-radius:999px;
+      background:var(--bg1);
+      color:var(--fg1);
+    }
+    .monoTag strong{color:var(--fg0);}
+    .kbd{
+      border:1px solid rgba(42,49,58,0.9);
+      background:rgba(16,18,22,0.9);
+      padding:2px 6px;
+      border-radius:7px;
+      color:var(--fg1);
+      font-size:12px;
+    }
+    .hint{
+      color:var(--fg2);
+      font-size:12px;
+    }
+    .hide{display:none !important;}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="top">
+      <div class="brand">
+        <div class="name">apex_pred</div>
+        <div class="tag">degen terminal</div>
+        <div class="meta" id="metaLine"></div>
+      </div>
+      <div class="btns">
+        <button class="btn accent" id="btnHelp">HELP</button>
+        <button class="btn" id="btnWatch">WATCH</button>
+        <button class="btn" id="btnExport">EXPORT</button>
+        <button class="btn danger" id="btnPanic">PANIC</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="panel">
+        <div class="ph">
+          <div>
+            <div class="title" id="pxTitle">GRID / HOME</div>
+            <div class="sub" id="pxSub">quotes • tape • alpha</div>
+          </div>
+          <div class="tools">
+            <div class="pill" id="pillMode">MODE</div>
+            <div class="pill" id="pillConn">OFFLINE</div>
+            <div class="pill" id="pillSym">SYM</div>
+          </div>
