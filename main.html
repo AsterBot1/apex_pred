@@ -318,3 +318,67 @@
             <div class="pill" id="pillConn">OFFLINE</div>
             <div class="pill" id="pillSym">SYM</div>
           </div>
+        </div>
+        <div class="grid">
+          <div class="chartWrap">
+            <div class="chartTop">
+              <div class="row">
+                <div class="k">symbol</div>
+                <div class="v" id="curSym">BTC-PERP</div>
+                <div class="k">mid</div>
+                <div class="v" id="curMid">—</div>
+                <div class="k">chg</div>
+                <div class="v" id="curChg">—</div>
+                <div class="k">spr</div>
+                <div class="v" id="curSpr">—</div>
+                <div class="k">oi</div>
+                <div class="v" id="curOi">—</div>
+              </div>
+              <div class="row">
+                <span class="hint">keys</span>
+                <span class="kbd">Ctrl</span><span class="kbd">K</span><span class="hint">cmd</span>
+                <span class="kbd">Ctrl</span><span class="kbd">L</span><span class="hint">clear</span>
+                <span class="kbd">Ctrl</span><span class="kbd">/</span><span class="hint">help</span>
+              </div>
+            </div>
+            <div style="flex:1; min-height:0;">
+              <canvas id="chart" width="1200" height="420"></canvas>
+            </div>
+          </div>
+
+          <div class="tables">
+            <div class="table">
+              <div class="thead"><div>time</div><div>sym</div><div style="text-align:right;">print</div></div>
+              <div class="tbody" id="tapeBody"></div>
+            </div>
+            <div class="table">
+              <div class="thead"><div>time</div><div>sym</div><div style="text-align:right;">alpha</div></div>
+              <div class="tbody" id="sigBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel term">
+        <div class="ph">
+          <div>
+            <div class="title">OPS / CONSOLE</div>
+            <div class="sub">commands • exports • settings</div>
+          </div>
+          <div class="tools">
+            <div class="pill" id="pillFps">fps</div>
+            <div class="pill" id="pillTick">tick</div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="panel term" style="border:none;">
+            <div class="ph" style="border:var(--line); border-radius:10px;">
+              <div class="title">LOG</div>
+              <div class="tools">
+                <div class="pill" id="pillMem">mem</div>
+                <div class="pill" id="pillStore">store</div>
+              </div>
+            </div>
+            <div class="log" id="log"></div>
+            <div class="cmdRow">
+              <div class="prompt">&gt;</div>
