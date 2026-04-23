@@ -574,3 +574,67 @@
           const a=Math.abs(score);
           if(a>2200) return score>0?"BREAKOUT":"DUMP";
           if(a>1400) return score>0?"MOMO+":"MOMO-";
+          if(a>800) return score>0?"BID":"ASK";
+          if(a>450) return score>0?"DRIFT+":"DRIFT-";
+          if(p.vol>0.02 && a>320) return score>0?"WICK+":"WICK-";
+          return "MEAN";
+        }
+        noteFor(score,sym){
+          const a=Math.abs(score);
+          if(a>2200) return sym+" tape is loud; spreads widen";
+          if(a>1400) return "one-way flow; watch liquidation pockets";
+          if(a>800) return "momentum edge; fade only with size";
+          if(a>450) return "range bleed; scalp timeframes";
+          return "noise-chop; wait for better setup";
+        }
+      }
+
+      function randn(){
+        let u=0,v=0;
+        while(u===0) u=Math.random();
+        while(v===0) v=Math.random();
+        return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+      }
+
+      class Chart{
+        constructor(canvas){
+          this.c=canvas;
+          this.ctx=canvas.getContext("2d", {alpha:false});
+          this.dpr=Math.max(1, Math.min(2, window.devicePixelRatio||1));
+          this.w=canvas.width;
+          this.h=canvas.height;
+          this.cursor=null;
+          this.resize();
+          window.addEventListener("resize", ()=>this.resize());
+          canvas.addEventListener("mousemove",(e)=>{
+            const r=canvas.getBoundingClientRect();
+            this.cursor={x:(e.clientX-r.left), y:(e.clientY-r.top)};
+          });
+          canvas.addEventListener("mouseleave",()=>{this.cursor=null;});
+        }
+        resize(){
+          const r=this.c.getBoundingClientRect();
+          const w=Math.max(600, Math.floor(r.width));
+          const h=Math.max(180, Math.floor(r.height));
+          this.c.width=Math.floor(w*this.dpr);
+          this.c.height=Math.floor(h*this.dpr);
+          this.w=this.c.width; this.h=this.c.height;
+        }
+        draw(series, quote, tape, sig, mode){
+          const ctx=this.ctx;
+          ctx.save();
+          ctx.scale(this.dpr,this.dpr);
+          const W=this.w/this.dpr, H=this.h/this.dpr;
+          ctx.fillStyle=getCss("--bg0"); ctx.fillRect(0,0,W,H);
+          const pad=10;
+          const gx=pad, gy=pad, gw=W-pad*2, gh=H-pad*2;
+
+          const pts=series.newestFirst(240).reverse();
+          if(pts.length<2){
+            ctx.fillStyle=getCss("--fg2");
+            ctx.fillText("no data", gx, gy+14);
+            ctx.restore();
+            return;
+          }
+          let ymin=Infinity, ymax=-Infinity;
+          for(const p of pts){ ymin=Math.min(ymin,p.y); ymax=Math.max(ymax,p.y); }
