@@ -830,3 +830,67 @@
             this.logLine(`<span class="dim">help</span>  pages  sym &lt;SYM&gt;  tape [N]  signals [N]  watch add|rm|clear  export  panic  seed`);
             this.logLine(`<span class="dim">extras</span>  vwap [N]  imb [N]  hot  clear`);
             return;
+          }
+          if(c==="pages"){
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">pages</span> HOME • FLOW • ALPHA • OPS`);
+            return;
+          }
+          if(c==="sym"){
+            const s=(parts[1]||"").toUpperCase();
+            if(!this.engine.syms.includes(s)){
+              this.logLine(`<span class="dim">${ts()}</span> <span class="warn">unknown symbol</span> ${escapeHtml(s||"(missing)")}`);
+              return;
+            }
+            this.sym=s;
+            $("pillSym").textContent=s;
+            $("footSym").textContent=s;
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc2">sym</span> ${escapeHtml(s)}`);
+            this.save();
+            return;
+          }
+          if(c==="seed"){
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">seed</span> 0x${this.seed.toString(16)}`);
+            return;
+          }
+          if(c==="panic"){
+            this.engine.togglePanic();
+            $("pillMode").textContent=this.engine.mode;
+            $("footMode").textContent=this.engine.mode;
+            this.logLine(`<span class="dim">${ts()}</span> <span class="warn">mode</span> ${this.engine.mode}`);
+            return;
+          }
+          if(c==="watch"){
+            const sub=(parts[1]||"").toLowerCase();
+            if(!sub){
+              this.logLine(`<span class="dim">${ts()}</span> <span class="acc">watch</span> ${[...this.watch].join(", ")||"(empty)"}`);
+              return;
+            }
+            if(sub==="add"){
+              const s=(parts[2]||"").toUpperCase();
+              if(!this.engine.syms.includes(s)){
+                this.logLine(`<span class="dim">${ts()}</span> <span class="warn">unknown symbol</span> ${escapeHtml(s||"(missing)")}`);
+                return;
+              }
+              this.watch.add(s);
+              this.logLine(`<span class="dim">${ts()}</span> <span class="good">watch +</span> ${escapeHtml(s)}`);
+              this.save();
+              return;
+            }
+            if(sub==="rm"||sub==="remove"){
+              const s=(parts[2]||"").toUpperCase();
+              this.watch.delete(s);
+              this.logLine(`<span class="dim">${ts()}</span> <span class="bad">watch -</span> ${escapeHtml(s||"(missing)")}`);
+              this.save();
+              return;
+            }
+            if(sub==="clear"){
+              this.watch.clear();
+              this.logLine(`<span class="dim">${ts()}</span> <span class="warn">watch cleared</span>`);
+              this.save();
+              return;
+            }
+            this.logLine(`<span class="dim">${ts()}</span> <span class="warn">usage</span> watch | watch add SYM | watch rm SYM | watch clear`);
+            return;
+          }
+          if(c==="tape"){
+            const n=clamp(parseInt(parts[1]||"16",10)||16, 1, 80);
