@@ -766,3 +766,67 @@
           $("cmd").addEventListener("keydown",(e)=>{
             if(e.key==="Enter"){
               const v=e.target.value.trim();
+              if(!v) return;
+              e.target.value="";
+              this.logLine(`<span class="dim">&gt;</span> ${escapeHtml(v)}`);
+              this.cmd(v);
+            }else if(e.key==="Tab"){
+              e.preventDefault();
+              this.autocomplete();
+            }
+          });
+          $("watchIn").addEventListener("keydown",(e)=>{
+            if(e.key==="Enter"){
+              const v=e.target.value.trim().toUpperCase();
+              e.target.value="";
+              if(!v) return;
+              this.cmd("watch add "+v);
+            }
+          });
+          document.addEventListener("keydown",(e)=>{
+            if(e.ctrlKey && (e.key==="k"||e.key==="K")){
+              e.preventDefault(); $("cmd").focus(); $("cmd").value="";
+              return;
+            }
+            if(e.ctrlKey && (e.key==="l"||e.key==="L")){
+              e.preventDefault(); this.clearLog(); return;
+            }
+            if(e.ctrlKey && e.key==="/"){
+              e.preventDefault(); this.cmd("help"); return;
+            }
+          });
+        }
+        save(){
+          const st={seed:this.seed, watch:[...this.watch], sym:this.sym};
+          this.store.save(st);
+          $("pillStore").textContent="store ok";
+          setTimeout(()=>{$("pillStore").textContent="store";},700);
+        }
+        clearLog(){
+          $("log").innerHTML="";
+          this.logLine(`<span class="dim">${ts()}</span> <span class="acc">log cleared</span>`);
+        }
+        logBanner(){
+          const meta=`seed 0x${this.seed.toString(16)} • local • no wallet`;
+          $("metaLine").textContent=meta;
+          this.logLine(`<span class="acc">apex_pred</span> <span class="dim">degen terminal</span>`);
+          this.logLine(`<span class="dim">hotkeys</span> <span class="acc2">Ctrl+K</span><span class="dim"> cmd</span>  <span class="acc2">Ctrl+L</span><span class="dim"> clear</span>  <span class="acc2">Ctrl+/</span><span class="dim"> help</span>`);
+          this.logLine(`<span class="dim">try</span> <span class="acc2">help</span><span class="dim">,</span> <span class="acc2">sym ETH-PERP</span><span class="dim">,</span> <span class="acc2">watch add SOL-PERP</span>`);
+        }
+        logLine(html){
+          const log=$("log");
+          const div=document.createElement("div");
+          div.innerHTML=html;
+          log.appendChild(div);
+          while(log.children.length>this.logMax) log.removeChild(log.firstChild);
+          log.scrollTop=log.scrollHeight;
+        }
+        cmd(line){
+          const parts=smartSplit(line);
+          if(parts.length===0) return;
+          const c=parts[0].toLowerCase();
+          if(c==="help"){
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">command map</span>`);
+            this.logLine(`<span class="dim">help</span>  pages  sym &lt;SYM&gt;  tape [N]  signals [N]  watch add|rm|clear  export  panic  seed`);
+            this.logLine(`<span class="dim">extras</span>  vwap [N]  imb [N]  hot  clear`);
+            return;
