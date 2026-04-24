@@ -958,3 +958,67 @@
           lines.push("watch "+[...this.watch].join(","));
           lines.push("");
           const q=this.engine.q.get(this.sym);
+          if(q){
+            lines.push("quote "+this.sym);
+            lines.push("mid "+fmt(q.mid,6));
+            lines.push("chg "+fmtSigned(q.ch/100,2)+"bp");
+            lines.push("spr "+fmtSigned(q.spr/100,2)+"bp");
+            lines.push("fnd "+fmtSigned(q.fnd/100,2)+"bp");
+            lines.push("oi "+Math.round(q.oi));
+          }
+          lines.push("");
+          lines.push("tape");
+          const tp=this.engine.tape.newestFirst(80);
+          for(const p of tp){
+            lines.push(`${fmtTime(p.ts)} ${p.sym} px ${fmt(p.px,6)} qty ${Math.abs(p.qty)} side ${p.side}`);
+          }
+          lines.push("");
+          lines.push("signals");
+          const sg=this.engine.sig.newestFirst(80);
+          for(const s of sg){
+            lines.push(`${fmtTime(s.ts)} ${s.sym} score ${s.score} tag ${s.tag} note ${s.note}`);
+          }
+          return lines.join("\n")+"\n";
+        }
+        autocomplete(){
+          const el=$("cmd");
+          const raw=el.value.trim();
+          if(!raw) return;
+          const opts=[
+            "help","pages","sym ","watch","watch add ","watch rm ","watch clear",
+            "tape","tape 16","signals","signals 12","vwap 24","imb 48","hot","panic","seed","export","clear"
+          ];
+          for(const o of opts){
+            if(o.startsWith(raw)){
+              el.value=o;
+              el.setSelectionRange(o.length,o.length);
+              return;
+            }
+          }
+        }
+        renderAll(force){
+          const q=this.engine.q.get(this.sym);
+          $("curSym").textContent=this.sym;
+          $("footSym").textContent=this.sym;
+          $("pillSym").textContent=this.sym;
+          $("pillMode").textContent=this.engine.mode;
+          $("footMode").textContent=this.engine.mode;
+          $("pillConn").textContent="OFFLINE";
+          if(q){
+            $("curMid").textContent=fmt(q.mid,6);
+            $("curChg").textContent=fmtSigned(q.ch/100,2)+"bp";
+            $("curSpr").textContent=fmtSigned(q.spr/100,2)+"bp";
+            $("curOi").textContent=fmtInt(q.oi);
+          }else{
+            $("curMid").textContent="—";
+            $("curChg").textContent="—";
+            $("curSpr").textContent="—";
+            $("curOi").textContent="—";
+          }
+          $("pillWatch").textContent=String(this.watch.size);
+          $("footTick").textContent=String(this.engine.tick);
+          $("pillTick").textContent="tick "+this.engine.tick;
+          $("pillHot").textContent="hot "+this.sym;
+          const rowsTape=this.engine.tape.newestFirst(30);
+          renderTape(rowsTape);
+          const rowsSig=this.engine.sig.newestFirst(24);
