@@ -1150,3 +1150,49 @@
           tr.className="tr";
           const tone=s.score>=0? "good":"bad";
           tr.innerHTML = `<div class="dim">${fmtTime(s.ts)}</div><div class="sym">${s.sym} <span class="dim">${escapeHtml(s.tag)}</span></div><div class="tone ${tone}">${fmtSigned(s.score/100,2)}</div>`;
+          el.appendChild(tr);
+        }
+      }
+
+      function renderWatch(syms,qmap){
+        const el=$("watchBody");
+        el.textContent="";
+        const list=[...syms].sort();
+        for(const sym of list){
+          const q=qmap.get(sym);
+          if(!q) continue;
+          const tone=q.ch>=0? "good":"bad";
+          const tr=document.createElement("div");
+          tr.className="tr";
+          tr.style.gridTemplateColumns="110px 1fr 110px";
+          tr.innerHTML = `<div class="sym">${sym}</div><div class="dim">spr ${fmtSigned(q.spr/100,2)}bp  oi ${fmtInt(q.oi)}</div><div class="tone ${tone}">${fmtSigned(q.ch/100,2)}bp</div>`;
+          tr.addEventListener("click", ()=>{
+            $("cmd").value="sym "+sym;
+            $("cmd").focus();
+          });
+          el.appendChild(tr);
+        }
+        $("pillWatch").textContent=String(list.length);
+      }
+
+      function downloadText(filename, text){
+        const blob=new Blob([text], {type:"text/plain;charset=utf-8"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;
+        a.download=filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+      }
+
+      const ui=new UI();
+      $("footMode").textContent=ui.engine.mode;
+      $("footSym").textContent=ui.sym;
+      $("pillMode").textContent=ui.engine.mode;
+      $("pillSym").textContent=ui.sym;
+      $("pillConn").textContent="OFFLINE";
+    })();
+  </script>
+</body>
+</html>
