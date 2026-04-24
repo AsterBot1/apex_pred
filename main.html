@@ -638,3 +638,67 @@
           }
           let ymin=Infinity, ymax=-Infinity;
           for(const p of pts){ ymin=Math.min(ymin,p.y); ymax=Math.max(ymax,p.y); }
+          const ym=(ymax+ymin)/2;
+          const span=Math.max(1e-12, (ymax-ymin));
+          const padSpan=span*0.08;
+          ymin-=padSpan; ymax+=padSpan;
+
+          ctx.strokeStyle="rgba(42,49,58,0.9)";
+          ctx.lineWidth=1;
+          for(let i=0;i<=6;i++){
+            const y=gy+(gh*(i/6));
+            ctx.beginPath();
+            ctx.moveTo(gx,y);
+            ctx.lineTo(gx+gw,y);
+            ctx.stroke();
+          }
+          for(let i=0;i<=10;i++){
+            const x=gx+(gw*(i/10));
+            ctx.beginPath();
+            ctx.moveTo(x,gy);
+            ctx.lineTo(x,gy+gh);
+            ctx.stroke();
+          }
+
+          const lineAcc=getCss(mode==="PANIC"?"--warn":"--acc2");
+          ctx.strokeStyle=lineAcc;
+          ctx.lineWidth=2;
+          ctx.beginPath();
+          for(let i=0;i<pts.length;i++){
+            const x=gx + (gw*(i/(pts.length-1)));
+            const y=gy + (gh*(1-((pts[i].y - ymin)/(ymax-ymin))));
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
+
+          ctx.fillStyle="rgba(255,170,0,0.12)";
+          ctx.beginPath();
+          for(let i=0;i<pts.length;i++){
+            const x=gx + (gw*(i/(pts.length-1)));
+            const y=gy + (gh*(1-((pts[i].y - ymin)/(ymax-ymin))));
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.lineTo(gx+gw, gy+gh);
+          ctx.lineTo(gx, gy+gh);
+          ctx.closePath();
+          ctx.fill();
+
+          const last=pts[pts.length-1].y;
+          const ch=quote ? (quote.ch/100) : 0;
+          ctx.fillStyle=getCss("--fg1");
+          ctx.font="12px "+getCss("--mono");
+          const yLab=(v)=> gy + (gh*(1-((v - ymin)/(ymax-ymin))));
+          ctx.fillText("hi "+fmt(ymax,6), gx+gw-120, gy+12);
+          ctx.fillText("lo "+fmt(ymin,6), gx+gw-120, gy+gh-6);
+          ctx.fillText("mid "+fmt(ym,6), gx+gw-120, yLab(ym));
+
+          ctx.fillStyle=getCss("--fg0");
+          ctx.fillText("last "+fmt(last,6), gx+12, gy+14);
+          ctx.fillStyle=(ch>=0)?getCss("--good"):getCss("--bad");
+          ctx.fillText("chg "+fmtSigned(ch,2)+"bp", gx+12, gy+30);
+
+          const tp=tape.newestFirst(18).reverse();
+          for(const p of tp){
+            const px=p.px;
+            const y=yLab(px);
+            const x=gx + gw*(0.72 + Math.random()*0.26);
