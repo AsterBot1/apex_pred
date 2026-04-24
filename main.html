@@ -1022,3 +1022,67 @@
           const rowsTape=this.engine.tape.newestFirst(30);
           renderTape(rowsTape);
           const rowsSig=this.engine.sig.newestFirst(24);
+          renderSig(rowsSig);
+          renderWatch([...this.watch], this.engine.q);
+          const series=this.engine.series.get(this.sym);
+          if(series) this.chart.draw(series,q,this.engine.tape,this.engine.sig,this.engine.mode);
+        }
+        loop(){
+          const step=()=>{
+            this.engine.tick++;
+            this.engine.stepQuotes();
+            this.engine.stepTape();
+            if(this.engine.tick%4===0) this.engine.stepSignals();
+            this.renderAll(false);
+            this.frames++;
+            const t=now();
+            if(t-this.lastT>800){
+              this.fps = Math.round((this.frames*1000)/(t-this.lastT));
+              this.frames=0;
+              this.lastT=t;
+              $("pillFps").textContent="fps "+this.fps;
+              $("pillMem").textContent="mem "+(Math.round(performance.memory?.usedJSHeapSize/1024/1024)||"—")+"MB";
+              $("footLeft").textContent="uptime "+fmtUptime() + " • seed 0x"+this.seed.toString(16) + " • local only";
+            }
+            requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      }
+
+      function fmtUptime(){
+        const ms=Math.floor(performance.now());
+        const s=Math.floor(ms/1000);
+        const h=Math.floor(s/3600);
+        const m=Math.floor((s%3600)/60);
+        const ss=s%60;
+        return String(h).padStart(2,"0")+"h:"+String(m).padStart(2,"0")+"m:"+String(ss).padStart(2,"0")+"s";
+      }
+
+      function smartSplit(line){
+        const out=[];
+        let cur="";
+        let q=false;
+        for(let i=0;i<line.length;i++){
+          const ch=line[i];
+          if(ch==='"'){ q=!q; continue; }
+          if(!q && /\s/.test(ch)){
+            if(cur){ out.push(cur); cur=""; }
+            continue;
+          }
+          cur+=ch;
+        }
+        if(cur) out.push(cur);
+        return out;
+      }
+
+      function escapeHtml(s){
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;");
+      }
+
+      function fmtTime(ms){
+        const d=new Date(ms);
+        const h=String(d.getHours()).padStart(2,"0");
+        const m=String(d.getMinutes()).padStart(2,"0");
+        const s=String(d.getSeconds()).padStart(2,"0");
+        const z=String(d.getMilliseconds()).padStart(3,"0");
