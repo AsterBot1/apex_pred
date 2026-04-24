@@ -1086,3 +1086,67 @@
         const m=String(d.getMinutes()).padStart(2,"0");
         const s=String(d.getSeconds()).padStart(2,"0");
         const z=String(d.getMilliseconds()).padStart(3,"0");
+        return `${h}:${m}:${s}.${z}`;
+      }
+
+      function fmtInt(x){
+        const v=Math.round(x);
+        if(v>=1e12) return fmt(v/1e12,2)+"T";
+        if(v>=1e9) return fmt(v/1e9,2)+"B";
+        if(v>=1e6) return fmt(v/1e6,2)+"M";
+        if(v>=1e3) return fmt(v/1e3,2)+"K";
+        return String(v);
+      }
+
+      function calcVwap(rows){
+        let not=0, vol=0;
+        for(const r of rows){
+          const q=Math.abs(r.qty);
+          not += r.px*q;
+          vol += q;
+        }
+        if(vol<=0) return 0;
+        return not/vol;
+      }
+
+      function calcImb(rows){
+        let buy=0, sell=0;
+        for(const r of rows){
+          const q=Math.abs(r.qty);
+          if(r.side===1) buy+=q;
+          else if(r.side===2) sell+=q;
+        }
+        const den=buy+sell;
+        if(den<=0) return 0;
+        return ((buy-sell)*10000)/den;
+      }
+
+      function rankHot(qmap){
+        const out=[];
+        for(const [sym,q] of qmap.entries()){
+          out.push({sym, mid:q.mid, ch:q.ch/100, vol1m:q.vol1m});
+        }
+        out.sort((a,b)=>Math.abs(b.ch)+b.vol1m*900 - (Math.abs(a.ch)+a.vol1m*900));
+        return out;
+      }
+
+      function renderTape(rows){
+        const el=$("tapeBody");
+        el.textContent="";
+        for(const p of rows){
+          const tr=document.createElement("div");
+          tr.className="tr";
+          const side=p.side===1? "good" : "bad";
+          tr.innerHTML = `<div class="dim">${fmtTime(p.ts)}</div><div class="sym">${p.sym}</div><div class="tone ${side}">${fmt(p.px,6)} ${p.side===1?"+":"-"}${fmtInt(Math.abs(p.qty))}</div>`;
+          el.appendChild(tr);
+        }
+      }
+
+      function renderSig(rows){
+        const el=$("sigBody");
+        el.textContent="";
+        for(const s of rows){
+          const tr=document.createElement("div");
+          tr.className="tr";
+          const tone=s.score>=0? "good":"bad";
+          tr.innerHTML = `<div class="dim">${fmtTime(s.ts)}</div><div class="sym">${s.sym} <span class="dim">${escapeHtml(s.tag)}</span></div><div class="tone ${tone}">${fmtSigned(s.score/100,2)}</div>`;
