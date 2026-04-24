@@ -702,3 +702,67 @@
             const px=p.px;
             const y=yLab(px);
             const x=gx + gw*(0.72 + Math.random()*0.26);
+            ctx.fillStyle=p.side===1?"rgba(68,230,140,0.55)":"rgba(255,88,88,0.55)";
+            ctx.fillRect(x, y-1, 8, 2);
+          }
+
+          const ss=sig.newestFirst(10).reverse();
+          for(const s of ss){
+            const a=Math.abs(s.score);
+            if(a<450) continue;
+            const x=gx + gw*(0.05 + Math.random()*0.6);
+            const y=gy + gh*(0.08 + Math.random()*0.84);
+            const col=s.score>=0? "rgba(68,230,140,0.55)" : "rgba(255,88,88,0.55)";
+            ctx.fillStyle=col;
+            ctx.beginPath();
+            ctx.arc(x,y, Math.min(10, 4 + a/800), 0, Math.PI*2);
+            ctx.fill();
+          }
+
+          if(this.cursor){
+            const cx=this.cursor.x, cy=this.cursor.y;
+            ctx.strokeStyle="rgba(218,224,230,0.15)";
+            ctx.beginPath();
+            ctx.moveTo(cx, gy);
+            ctx.lineTo(cx, gy+gh);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(gx, cy);
+            ctx.lineTo(gx+gw, cy);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function getCss(name){
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      class UI{
+        constructor(){
+          this.store=new Store("apex_pred.state.v1");
+          const st=this.store.load() || {};
+          this.seed= (st.seed>>>0) || ((Date.now() ^ (Math.random()*1e9|0))>>>0);
+          this.watch= new Set(Array.isArray(st.watch)? st.watch : ["BTC-PERP","ETH-PERP","SOL-PERP"]);
+          this.sym = (typeof st.sym==="string" && st.sym) ? st.sym : "BTC-PERP";
+          this.engine=new Engine(this.seed);
+          this.chart=new Chart($("chart"));
+          this.tick=0;
+          this.lastT=now();
+          this.frames=0;
+          this.fps=0;
+          this.logMax=650;
+          this.bind();
+          this.logBanner();
+          this.renderAll(true);
+          this.loop();
+        }
+        bind(){
+          $("btnHelp").addEventListener("click", ()=>this.cmd("help"));
+          $("btnWatch").addEventListener("click", ()=>this.cmd("watch"));
+          $("btnExport").addEventListener("click", ()=>this.cmd("export"));
+          $("btnPanic").addEventListener("click", ()=>this.cmd("panic"));
+          $("cmd").addEventListener("keydown",(e)=>{
+            if(e.key==="Enter"){
+              const v=e.target.value.trim();
