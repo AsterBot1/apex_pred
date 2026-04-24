@@ -894,3 +894,67 @@
           }
           if(c==="tape"){
             const n=clamp(parseInt(parts[1]||"16",10)||16, 1, 80);
+            const rows=this.engine.tape.newestFirst(n);
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">tape</span> last ${n}`);
+            for(const p of rows){
+              const side=p.side===1? `<span class="good">BUY</span>` : `<span class="bad">SELL</span>`;
+              this.logLine(`<span class="dim">${fmtTime(p.ts)}</span> <span class="acc2">${p.sym}</span> px ${fmt(p.px,6)} qty ${fmtInt(Math.abs(p.qty))} ${side}`);
+            }
+            return;
+          }
+          if(c==="signals"){
+            const n=clamp(parseInt(parts[1]||"12",10)||12, 1, 80);
+            const rows=this.engine.sig.newestFirst(n);
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">signals</span> last ${n}`);
+            for(const s of rows){
+              const tone=s.score>=0? "good":"bad";
+              this.logLine(`<span class="dim">${fmtTime(s.ts)}</span> <span class="acc2">${s.sym}</span> <span class="${tone}">${fmtSigned(s.score/100,2)}</span> tag ${escapeHtml(s.tag)} <span class="dim">${escapeHtml(s.note)}</span>`);
+            }
+            return;
+          }
+          if(c==="vwap"){
+            const n=clamp(parseInt(parts[1]||"24",10)||24, 2, 256);
+            const rows=this.engine.tape.newestFirst(600).filter(x=>x.sym===this.sym).slice(0,n);
+            const vwap=calcVwap(rows);
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">vwap</span> ${this.sym} n=${n} -> <span class="acc2">${fmt(vwap,6)}</span>`);
+            return;
+          }
+          if(c==="imb"){
+            const n=clamp(parseInt(parts[1]||"48",10)||48, 2, 256);
+            const rows=this.engine.tape.newestFirst(600).filter(x=>x.sym===this.sym).slice(0,n);
+            const imb=calcImb(rows);
+            const tone=imb>=0?"good":"bad";
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">imb</span> ${this.sym} n=${n} -> <span class="${tone}">${fmtSigned(imb,2)}bp</span>`);
+            return;
+          }
+          if(c==="hot"){
+            const hot=rankHot(this.engine.q);
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">hot</span> (vol proxy)`);
+            for(const x of hot.slice(0,10)){
+              const tone=x.ch>=0? "good":"bad";
+              this.logLine(`<span class="dim">•</span> <span class="acc2">${x.sym}</span> mid ${fmt(x.mid,6)} <span class="${tone}">${fmtSigned(x.ch,2)}bp</span> vol ${fmt(x.vol1m,4)}`);
+            }
+            return;
+          }
+          if(c==="export"){
+            const blob=this.exportText();
+            downloadText(`apex_pred_export_${Date.now()}.txt`, blob);
+            this.logLine(`<span class="dim">${ts()}</span> <span class="acc">exported</span> snapshot text`);
+            return;
+          }
+          if(c==="clear"){
+            this.clearLog();
+            return;
+          }
+          this.logLine(`<span class="dim">${ts()}</span> <span class="warn">unknown cmd</span> ${escapeHtml(c)} <span class="dim">(try help)</span>`);
+        }
+        exportText(){
+          const lines=[];
+          lines.push("apex_pred export");
+          lines.push("seed 0x"+this.seed.toString(16));
+          lines.push("mode "+this.engine.mode);
+          lines.push("sym "+this.sym);
+          lines.push("");
+          lines.push("watch "+[...this.watch].join(","));
+          lines.push("");
+          const q=this.engine.q.get(this.sym);
